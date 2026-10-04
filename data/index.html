@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+  <title>Esteira Retrofit</title>
+  <link rel="stylesheet" href="style.css"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+</head>
+<body>
+
+<!-- ═══════════════════════ HEADER ═══════════════════════ -->
+<header>
+  <div class="logo">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+         stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+    </svg>
+    Esteira Retrofit
+  </div>
+  <div class="header-right">
+    <div class="conn-badge">
+      <div class="conn-dot disconnected" id="connDot"></div>
+      <span id="connLabel">Desconectado</span>
+    </div>
+    <div class="tab-btns">
+      <button class="tab-btn active" data-tab="dashboard">Painel</button>
+      <button class="tab-btn" data-tab="settings">Config</button>
+    </div>
+  </div>
+</header>
+
+<!-- ═══════════════════════ PANELS ═══════════════════════ -->
+<div class="panels">
+
+  <!-- ─────────── DASHBOARD ─────────── -->
+  <div id="tab-dashboard" class="tab-panel active">
+
+    <!-- Linha de meta / badge -->
+    <div class="meta-row">
+      <span class="mode-badge" id="modeBadge">MALHA ABERTA</span>
+      <span class="homing-warn" id="homingStatus"></span>
+    </div>
+
+    <!-- Banner de falha -->
+    <div class="fault-banner hidden" id="faultBanner">
+      <span class="fault-icon">⚠</span>
+      <span class="fault-msg" id="faultMsg"></span>
+      <button class="fault-clear" id="btnClearFault">LIMPAR</button>
+    </div>
+
+    <!-- Velocidade — cresce para preencher o espaço -->
+    <div class="speed-section">
+      <div class="gauge-wrap">
+        <svg class="gauge-svg" viewBox="0 0 220 142" id="gaugeSvg"
+             xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%"   stop-color="#0096ff"/>
+              <stop offset="100%" stop-color="#00e5a0"/>
+            </linearGradient>
+          </defs>
+          <!-- Arco 240°: cx=110 cy=88 r=76  (início 210° → topo → fim 330°) -->
+          <path class="gauge-track" d="M 44.2,126 A 76,76 0 1 1 175.8,126"/>
+          <path class="gauge-fill"  id="gaugeFill"
+                                    d="M 44.2,126 A 76,76 0 1 1 175.8,126"/>
+          <!-- font-size em unidades SVG (escala com viewBox) -->
+          <text class="gauge-value" x="110" y="85" font-size="28"
+                id="gaugeText">0.0</text>
+          <text class="gauge-unit"  x="110" y="112" font-size="11">km/h</text>
+          <text class="gauge-scale" x="41"  y="135" text-anchor="start"
+                font-size="8">0</text>
+          <text class="gauge-scale" x="179" y="135" text-anchor="end"
+                font-size="8" id="gaugeMax">12</text>
+        </svg>
+      </div>
+
+      <div class="speed-controls">
+        <button class="adj-btn" id="btnSpeedDown">−</button>
+        <input  type="range" class="speed-slider" id="speedSlider"
+                min="0" max="12" step="0.5" value="0"/>
+        <button class="adj-btn" id="btnSpeedUp">+</button>
+      </div>
+      <div class="speed-target-row">
+        Alvo: <strong id="targetSpeedDisplay">0.0</strong> km/h
+      </div>
+    </div>
+
+    <!-- Inclinação -->
+    <div class="incline-section">
+      <div class="incline-row">
+        <span class="section-label">INCLINAÇÃO</span>
+        <div class="incline-bar-wrap">
+          <div class="incline-bar-fill" id="inclineBar" style="width:0%"></div>
+        </div>
+        <span class="incline-badge">
+          <span id="inclineDisplay">0.0</span>°
+        </span>
+        <div class="incline-ctrl">
+          <button class="ctrl-btn" id="btnInclineDown" title="Diminuir">↓</button>
+          <button class="ctrl-btn" id="btnHoming"      title="Homing">⌂</button>
+          <button class="ctrl-btn" id="btnInclineUp"   title="Aumentar">↑</button>
+        </div>
+      </div>
+      <div class="incline-sub">Alvo: <strong id="targetInclineDisplay">0.0</strong>°</div>
+    </div>
+
+    <!-- Start / Stop -->
+    <button class="start-btn" id="startBtn" disabled>INICIAR</button>
+
+    <!-- Telemetria -->
+    <div class="tele-strip">
+      <div class="tele-item">
+        <span class="tele-label">VELOCIDADE</span>
+        <span class="tele-val"><span id="statSpeed">0.0</span><small> km/h</small></span>
+      </div>
+      <div class="tele-div"></div>
+      <div class="tele-item">
+        <span class="tele-label">RPM</span>
+        <span class="tele-val"><span id="statRPM">0</span></span>
+      </div>
+      <div class="tele-div"></div>
+      <div class="tele-item">
+        <span class="tele-label">PWM</span>
+        <span class="tele-val"><span id="statPWM">0</span><small> %</small></span>
+      </div>
+    </div>
+
+    <!-- DEBUG — remover após validar encoder -->
+    <div class="dbg-bar">
+      <span class="dbg-label">DBG ENCODER</span>
+      <span class="dbg-pulses">pulsos: <strong id="dbgPulses">0</strong></span>
+      <span class="dbg-period">período: <strong id="dbgPeriod">—</strong></span>
+    </div>
+
+  </div><!-- /dashboard -->
+
+  <!-- ─────────── SETTINGS ─────────── -->
+  <div id="tab-settings" class="tab-panel settings-tab">
+
+    <div class="card">
+      <div class="card-title">Rede</div>
+      <div class="info-row">
+        <span class="label">Endereço IP</span>
+        <span class="value" id="infoIP">—</span>
+      </div>
+      <div class="info-row">
+        <span class="label">Modo</span>
+        <span class="value" id="infoMode">—</span>
+      </div>
+      <div class="info-row">
+        <span class="label">mDNS</span>
+        <span class="value">esteira.local</span>
+      </div>
+    </div>
+
+    <div class="card" id="pidCard">
+      <div class="card-title">Controle PID — Malha Fechada</div>
+      <div class="pid-grid">
+        <div class="form-group">
+          <label class="form-label">Kp</label>
+          <input type="number" class="form-input" id="pidKp" step="0.1" min="0" max="20" placeholder="1.5"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Ki</label>
+          <input type="number" class="form-input" id="pidKi" step="0.01" min="0" max="5" placeholder="0.15"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Kd</label>
+          <input type="number" class="form-input" id="pidKd" step="0.01" min="0" max="2" placeholder="0.0"/>
+        </div>
+      </div>
+      <p class="form-note">Persiste na NVS ao reiniciar. Somente malha fechada.</p>
+      <button class="btn btn-primary" id="btnSavePid">Salvar na NVS</button>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Configurar WiFi</div>
+      <div class="form-group">
+        <label class="form-label">SSID (Nome da Rede)</label>
+        <input type="text"     class="form-input" id="wifiSSID" placeholder="MinhaRede"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Senha</label>
+        <input type="password" class="form-input" id="wifiPass" placeholder="••••••••"/>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:6px">
+        <button class="btn btn-primary" id="btnSaveWifi">Conectar</button>
+        <button class="btn btn-danger"  id="btnClearWifi">Apagar Credenciais</button>
+      </div>
+    </div>
+
+  </div><!-- /settings -->
+
+</div><!-- /panels -->
+
+<div class="toast" id="toast"></div>
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,32 @@
+{
+  "name": "TreadmillDisplay",
+  "version": "2.0.0",
+  "description": "Biblioteca para o painel de LED VK1640/TM1640 de esteiras ergometricas (retrofit), com escrita de texto/numeros e efeito de rolagem (letreiro) unificado entre todos os displays.",
+  "keywords": ["display", "led", "tm1640", "vk1640", "7-segment", "treadmill", "esteira", "retrofit"],
+  "authors": [
+    {
+      "name": "Ativus AI",
+      "email": "tecnologia_info@ativusai.com"
+    }
+  ],
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "license": "MIT",
+  "frameworks": "arduino",
+  "platforms": "*",
+  "dependencies": {
+    "maxint-rd/TM16xx LEDs and Buttons": "*"
+  },
+  "export": {
+    "include": [
+      "TreadmillDisplay.h",
+      "TreadmillDisplay.cpp",
+      "TreadmillFont.h",
+      "library.properties",
+      "library.json",
+      "README.md"
+    ]
+  }
+}
